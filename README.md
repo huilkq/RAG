@@ -183,22 +183,6 @@ uv run pytest tests/test_document_service.py
 uv run pytest --cov=app tests/
 ```
 
-### 代码质量检查
-
-```bash
-# 代码格式化
-uv run black app/ tests/
-
-# 导入排序
-uv run isort app/ tests/
-
-# 类型检查
-uv run mypy app/
-
-# 代码风格检查
-uv run flake8 app/ tests/
-```
-
 ## 部署说明
 
 ### Docker 部署
@@ -260,23 +244,12 @@ A: 在 `app/services/document_service.py` 中修改 `split_text` 方法的参数
 
 A: 在 `app/services/parser_service.py` 中添加新的解析器。
 
-## 贡献指南
 
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
 
 ## 许可证
 
 本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
-## 联系方式
-
-- 项目维护者: RAG Team
-- 邮箱: team@rag.com
-- 项目地址: https://github.com/your-org/rag-system
 
 ## 更新日志
 
