@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  # RAG主服务
+  rag-app:
+    build: .
+    container_name: rag-app
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL}
+      - OPENAI_MODEL=${OPENAI_MODEL}
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT}
+      - VECTOR_DB_TYPE=${VECTOR_DB_TYPE}
+      - VECTOR_DB_PATH=/app/data/vector_index
+      - UPLOAD_DIR=/app/data/uploads
+      - TEMP_DIR=/app/data/temp
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - rag-network
+
+  # Redis服务（用于缓存和会话管理）
+  redis:
+    image: redis:7-alpine
+    container_name: rag-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - rag-network
+
+  # Milvus向量数据库（可选）
+  milvus:
+    image: milvusdb/milvus:v2.3.0
+    container_name: rag-milvus
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    environment:
+      - ETCD_USE_EMBED=true
+      - ETCD_DATA_DIR=/var/lib/milvus/etcd
+      - ETCD_CONFIG_PATH=/milvus/configs/etcd.yaml
+      - MILVUS_DATA_DIR=/var/lib/milvus/data
+      - MILVUS_CONFIG_PATH=/milvus/configs/milvus.yaml
+    volumes:
+      - milvus_data:/var/lib/milvus
+    restart: unless-stopped
+    networks:
+      - rag-network
+    profiles:
+      - milvus
+
+  # Chroma向量数据库（可选）
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: rag-chroma
+    ports:
+      - "8001:8000"
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+      - CHROMA_SERVER_CORS_ALLOW_ORIGINS=["*"]
+    volumes:
+      - chroma_data:/chroma/chroma
+    restart: unless-stopped
+    networks:
+      - rag-network
+    profiles:
+      - chroma
+
+  # Nginx反向代理（可选）
+  nginx:
+    image: nginx:alpine
+    container_name: rag-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - rag-app
+    restart: unless-stopped
+    networks:
+      - rag-network
+    profiles:
+      - nginx
+
+volumes:
+  redis_data:
+    driver: local
+  milvus_data:
+    driver: local
+  chroma_data:
+    driver: local
+
+networks:
+  rag-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
