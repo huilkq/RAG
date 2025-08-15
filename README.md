@@ -154,13 +154,6 @@ RAG/
 └── README.md              # 项目说明
 ```
 
-## API 文档
-
-启动服务后，访问以下地址查看 API 文档：
-
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-
 ## 开发指南
 
 ### 代码规范
