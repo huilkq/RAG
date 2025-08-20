@@ -1,3 +1,6 @@
+[tool.hatch.build.targets.wheel]
+packages = ["rag_system"]
+
 [project]
 name = "rag-system"
 version = "0.1.0"
